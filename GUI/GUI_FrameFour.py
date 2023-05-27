@@ -15,8 +15,8 @@ class RowDefinition(ctk.CTkFrame):
 		self.add_checkbox = None
 		self.label = None
 		self.column = column
-		self.is_included = ctk.IntVar(value=0)
-		self.is_pk = ctk.IntVar(value=0)
+		self.is_included = ctk.BooleanVar(value=False)
+		self.is_pk = ctk.BooleanVar(value=False)
 		self.create_widgets()
 
 	def create_widgets(self):
@@ -24,10 +24,10 @@ class RowDefinition(ctk.CTkFrame):
 		self.label = ctk.CTkLabel(master=self, text=self.column.source_name, width=100)
 		self.label.grid(row=0, column=0, padx=(5, 5), pady=(5, 5))
 
-		self.add_checkbox = ctk.CTkCheckBox(master=self, text="", onvalue=1, offvalue=0, variable=self.is_included)
+		self.add_checkbox = ctk.CTkCheckBox(master=self, text="", onvalue=True, offvalue=False, variable=self.is_included)
 		self.add_checkbox.grid(row=0, column=1, padx=(100, 5), pady=(5, 5))
 
-		self.pk_checkbox = ctk.CTkCheckBox(master=self, text="", onvalue=1, offvalue=0, variable=self.is_pk)
+		self.pk_checkbox = ctk.CTkCheckBox(master=self, text="", onvalue=True, offvalue=False, variable=self.is_pk)
 		self.pk_checkbox.grid(row=0, column=2, padx=(5, 5), pady=(5, 5))
 
 		self.datatype_combobox = ctk.CTkComboBox(master=self, state="readonly", values=["NVARCHAR", "DECIMAL", "INT", "BIGINT", "DATE", "DATETIME", "BIT"])
@@ -37,8 +37,11 @@ class RowDefinition(ctk.CTkFrame):
 		self.business_name_entry.grid(row=0, column=4, padx=(5, 5), pady=(5, 5))
 
 		if self.column is not None:
-			self.pk_checkbox.configure(variable=self.column.is_primary_key)
+			self.is_pk = ctk.BooleanVar(value=self.column.is_primary_key)
+			self.pk_checkbox.configure(variable=self.is_pk)
 			self.datatype_combobox.set(self.column.data_type.value)
+			if self.column.business_name is None:
+				self.column.business_name = ""
 			self.business_name_entry.insert(0, self.column.business_name)
 
 
@@ -46,6 +49,7 @@ class FrameFour(ctk.CTkFrame):
 	def __init__(self, app, entity, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.app = app
+		self.controller = Controller()
 		self.entity = entity
 
 		# Row 1
@@ -72,34 +76,24 @@ class FrameFour(ctk.CTkFrame):
 		header_label5.grid(row=0, column=4, padx=(40, 40), sticky="w")
 
 		# Row 3
-		scrollable_row_definitions_frame = ctk.CTkScrollableFrame(self, width=780, height=200)
-		scrollable_row_definitions_frame.pack(pady=(0, 10), fill="both", expand=True)
+		self.scrollable_row_definitions_frame = ctk.CTkScrollableFrame(self, width=780, height=200)
+		self.scrollable_row_definitions_frame.pack(pady=(0, 10), fill="both", expand=True)
 
-		# Add RowDefinition elements
-		column_labels = ["Column1", "Column2", "Column3"]  # Replace these labels with your own labels
-		# Use `self.entity.columns` when creating `RowDefinition` instances.
+		self.entity.columns = self.controller.get_source_columns()
 		for column in self.entity.columns:
-			row_definition = RowDefinition(scrollable_row_definitions_frame, column=column)
+			row_definition = RowDefinition(self.scrollable_row_definitions_frame, column=column)
 			row_definition.pack(pady=(0, 5))
 
 	def process_data(self):
 		self.update_entity()
 
 	def update_entity(self):
-		for i, row_definition in enumerate(self.children.values()):
-			column = self.entity.columns[i]
-			#column.source_name = row_definition.source_name_entry.get()
-			column.is_primary_key = row_definition.pk_checkbox.get()
-			column.data_type = DataType(row_definition.datatype_combobox.get())
-			column.business_name = row_definition.business_name_entry.get()
-
-# def load_columns(self):
-#		file_path = self.master.file_path
-# print(file_path)
-#
-# if file_path:
-#			column_names = Controller.get_source_columns(file_path)
-# self.column_combobox.configure(values=column_names)
-# self.column_combobox.set("Choose a column")
-# else:
-# self.column_combobox.set("No file selected")
+		for i, row_definition in enumerate(self.scrollable_row_definitions_frame.children.values()):
+			if isinstance(row_definition, RowDefinition):
+				print("Updating row definitions")
+				column = self.entity.columns[i]
+				if row_definition.is_included.get():
+					column.is_primary_key = row_definition.pk_checkbox.get()
+					column.data_type = DataType(row_definition.datatype_combobox.get())
+					column.business_name = row_definition.business_name_entry.get()
+		self.controller.update_entity(self.entity)

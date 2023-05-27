@@ -59,20 +59,21 @@ class DataVaultManagerApp(ctk.CTk):
         self.show_frame(self.current_frame)
 
     def create_frame_four_instances(self, count, entities):
-        print(f"Detected {count} amount of entities instanced")
         for i, entity in enumerate(entities):
             frame_id = f"FrameFour_{i}"
+            print(f"Creating {frame_id}")
             frame = FrameFour(app=self, master=self, entity=entity)
             self.frames[frame_id] = frame
+
             frame.pack(side="top", fill="both", expand=True)
             frame.pack_forget()
-
+            self.create_nav_buttons(frame)
             # Add FrameFour to frame_order
             self.frame_order.append(frame_id)
+            print(f"Frame order: {self.frame_order}")
 
-            self.create_nav_buttons(frame)
+        #self.show_frame(f"FrameFour_{0}")
 
-        self.show_frame(frame_id)
 
     def create_nav_buttons(self, frame):
         """
@@ -88,13 +89,17 @@ class DataVaultManagerApp(ctk.CTk):
         """
         Switches the display to the previous frame in the history.
         """
-        if not self.frame_history:
+        if len(self.frame_history) <= 1:
             return
-
         self.hide_current_frame()
-
-        self.current_frame = self.frame_history.pop()
+        self.frame_history.pop()
+        previous_index = self.frame_order.index(self.current_frame) - 1
+        self.current_frame = self.frame_order[previous_index]
         self.show_frame(self.current_frame)
+
+
+        #self.current_frame = self.frame_history.pop()
+        #self.show_frame(self.current_frame)
 
     def go_next(self):
         """

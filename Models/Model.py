@@ -13,7 +13,16 @@ class Model:
             cls._instance.entities = []
             cls._instance.source_columns = []
             cls._instance.dataframe = []
+            cls._instance.columns = []
         return cls._instance
+
+    @property
+    def columns(self):
+        return self._columns
+
+    @columns.setter
+    def columns(self, value):
+        self._columns = value
 
     @property
     def dataframe(self):
