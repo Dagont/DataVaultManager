@@ -1,3 +1,5 @@
+import copy
+
 import customtkinter as ctk
 from tkinter import ttk
 from Controller import Controller
@@ -79,7 +81,9 @@ class FrameFour(ctk.CTkFrame):
 		self.scrollable_row_definitions_frame = ctk.CTkScrollableFrame(self, width=780, height=200)
 		self.scrollable_row_definitions_frame.pack(pady=(0, 10), fill="both", expand=True)
 
-		self.entity.columns = self.controller.get_source_columns()
+		if not self.entity.columns:
+			self.entity.columns = copy.deepcopy(self.controller.get_source_columns())
+
 		for column in self.entity.columns:
 			row_definition = RowDefinition(self.scrollable_row_definitions_frame, column=column)
 			row_definition.pack(pady=(0, 5))
@@ -87,13 +91,26 @@ class FrameFour(ctk.CTkFrame):
 	def process_data(self):
 		self.update_entity()
 
-	def update_entity(self):
+	"""def update_entity(self):
 		for i, row_definition in enumerate(self.scrollable_row_definitions_frame.children.values()):
 			if isinstance(row_definition, RowDefinition):
-				print("Updating row definitions")
 				column = self.entity.columns[i]
-				if row_definition.is_included.get():
-					column.is_primary_key = row_definition.pk_checkbox.get()
+				column.is_included = row_definition.is_included.get()
+				column.is_primary_key = row_definition.is_pk.get()
+				column.data_type = DataType(row_definition.datatype_combobox.get())
+				column.business_name = row_definition.business_name_entry.get()
+
+		self.controller.update_entity(self.entity)"""
+
+	def update_entity(self):
+		for row_definition in self.scrollable_row_definitions_frame.children.values():
+			if isinstance(row_definition, RowDefinition):
+				column = next((col for col in self.entity.columns if col.source_name == row_definition.label.cget("text")), None)
+				if column is not None:
+					column.is_included = row_definition.is_included.get()
+					column.is_primary_key = row_definition.is_pk.get()
 					column.data_type = DataType(row_definition.datatype_combobox.get())
 					column.business_name = row_definition.business_name_entry.get()
+
 		self.controller.update_entity(self.entity)
+

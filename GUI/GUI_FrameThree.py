@@ -8,8 +8,9 @@ ctk.set_appearance_mode("dark")
 
 
 class RelationsDefinition(ctk.CTkFrame):
-	def __init__(self, *args, entities=[], combobox1_options=[], combobox2_options=[], **kwargs):
+	def __init__(self, frame_three, *args, entities=[], combobox1_options=[], combobox2_options=[], **kwargs):
 		super().__init__(*args, **kwargs)
+		self.frame_three = frame_three
 		self.combobox1_options = combobox1_options
 		self.combobox2_options = combobox2_options
 		self.entities = entities
@@ -28,6 +29,7 @@ class RelationsDefinition(ctk.CTkFrame):
 		delete_button.pack(side="left", padx=(0, 50))
 
 	def delete_element(self):
+		self.frame_three.relations_definitions.remove(self)
 		self.destroy()
 
 	def get_entity_relationship(self):
@@ -38,7 +40,6 @@ class RelationsDefinition(ctk.CTkFrame):
 		entity2 = next((entity for entity in self.entities if entity.name == entity2_label), None)
 		if entity1 is not None and entity2 is not None:
 			return EntityRelationship(entity1, entity2)
-
 
 		return None
 
@@ -68,7 +69,7 @@ class FrameThree(ctk.CTkFrame):
 			print(entities)
 			combobox1_options = [entity.name for entity in entities if entity.is_link]
 			combobox2_options = [entity.name for entity in entities if entity.is_hub or entity.is_sat]
-			relations_def = RelationsDefinition(self.scrollable_relations_frame, entities=entities, combobox1_options=combobox1_options, combobox2_options=combobox2_options)
+			relations_def = RelationsDefinition(self, self.scrollable_relations_frame, entities=entities, combobox1_options=combobox1_options, combobox2_options=combobox2_options)
 			relations_def.pack(pady=(0, 5))
 			self.relations_definitions.append(relations_def)
 		except tk.TclError as e:
@@ -80,4 +81,5 @@ class FrameThree(ctk.CTkFrame):
 			entity_relationship = relations_def.get_entity_relationship()
 			if entity_relationship is not None:
 				self.entity_relationships.append(entity_relationship)
-		print(self.entity_relationships)
+		#print(self.entity_relationships)
+		self.controller.process_data("FrameThree", entity_relationships=self.entity_relationships)

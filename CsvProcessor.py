@@ -58,7 +58,7 @@ class CsvProcessor:
                 dt = 'NVARCHAR'
             data_types.append(DataType(dt))
 
-        self.columns = [Column(h, False, dt, None) for h, dt in zip(headers, data_types)]
+        self.columns = [Column(h, False, False, dt, None) for h, dt in zip(headers, data_types)]
 
         return headers, data_types
 
